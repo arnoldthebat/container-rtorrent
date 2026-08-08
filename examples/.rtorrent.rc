@@ -19,9 +19,9 @@ execute.throw = sh, -c, (cat,\
     "\"", (cfg.watch), "start\" ")
 
 # Listening port for incoming peer traffic and set dht
-network.listen.port.set = 51234
+network.listen.port.set = 55555
 dht.mode.set = on
-dht.override_port.set = 51234
+dht.override_port.set = 55555
 protocol.pex.set = yes
 
 # Overall system peer limits
