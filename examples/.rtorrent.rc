@@ -1,0 +1,107 @@
+#############################################################################
+# A minimal rTorrent configuration for >0.16.x
+#############################################################################
+
+# Instance layout (base paths)
+method.insert = cfg.basedir,  private|const|string, (cat, "/data/rtorrent/")
+method.insert = cfg.download, private|const|string, (cat, (cfg.basedir), "download/")
+method.insert = cfg.logs,     private|const|string, (cat, (cfg.basedir), "logs/")
+method.insert = cfg.logfile,  private|const|string, (cat, (cfg.logs), "rtorrent-", (system.time), ".log")
+method.insert = cfg.session,  private|const|string, (cat, (cfg.basedir), ".session/")
+method.insert = cfg.watch,    private|const|string, (cat, (cfg.basedir), "watch/")
+
+# Create instance directories
+execute.throw = sh, -c, (cat,\
+    "mkdir -p \"", (cfg.download), "\" ",\
+    "\"", (cfg.logs), "\" ",\
+    "\"", (cfg.session), "\" ",\
+    "\"", (cfg.watch), "load\" ",\
+    "\"", (cfg.watch), "start\" ")
+
+# Listening port for incoming peer traffic and set dht
+network.listen.port.set = 51234
+dht.mode.set = on
+dht.override_port.set = 51234
+protocol.pex.set = yes
+
+# Overall system peer limits
+throttle.max_downloads.global.set = 300
+throttle.max_uploads.set = 50
+throttle.max_uploads.global.set = 250
+
+# Peer settings
+throttle.min_peers.normal.set = 20
+throttle.max_peers.normal.set = 60
+throttle.min_peers.seed.set = 20
+throttle.max_peers.seed.set = 60
+trackers.numwant.set = 80
+
+# Upload and Download Limits (0 = unlimited)
+throttle.global_down.max_rate.set_kb = 30720
+throttle.global_up.max_rate.set_kb = 25600
+
+# Asymmetric: require encrypted handshake, but allow the actual
+# data stream to fall back to plaintext if needed
+protocol.encryption.set = handshake_require, stream_prefer
+
+# Memory resource usage
+pieces.memory.max.set = 1800M
+network.xmlrpc.size_limit.set = 4M
+# Open the base port
+network.scgi.open_port = 127.0.0.1:5000
+
+# Basic operational settings
+session.path.set = (cat, (cfg.session))
+directory.default.set = (cat, (cfg.download))
+log.execute = (cat, (cfg.logs), "execute.log")
+log.xmlrpc = (cat, (cfg.logs), "xmlrpc.log")
+
+execute.nothrow = sh, -c, (cat, "echo > ", (session.path), "rtorrent.pid ", (system.pid))
+
+# Other operational settings
+system.umask.set = 0022
+system.cwd.set = (directory.default)
+network.http.dns_cache_timeout.set = 25
+
+# Helper methods
+method.insert = system.startup_time, value|const, (system.time)
+method.insert = d.data_path, simple,\
+    "if=(d.is_multi_file),\
+        (cat, (d.directory), /),\
+        (cat, (d.directory), /, (d.name))"
+method.insert = d.session_file, simple, "cat=(session.path), (d.hash), .torrent"
+
+# Logging
+print = (cat, "Logging to ", (cfg.logfile))
+log.open_file = "log", (cfg.logfile)
+log.add_output = "info", "log"
+log.add_output = "notice", "log"
+log.add_output = "warn", "log"
+
+#############################################################################
+# Watch Directories
+#############################################################################
+# Watch directory: Load AND start
+method.insert = watch_start_method, simple, "load.start=(cat,(cfg.watch),\"start/*.torrent\")"
+schedule = watch_start, 10, 10, watch_start_method=
+
+##############################################################################
+# Auto Delete / Maintenance
+##############################################################################
+# method.insert = d.data_path, simple, "if=(d.is_multi_file),(cat,(d.directory),/),(cat,(d.directory),/,(d.name))"
+# method.set_key = event.download.erased, delete_data, "d.delete_tied="
+# method.set_key = event.download.erased, delete_meta, "d.delete_tied="
+# method.set_key = event.download.erased,untie_erased,"d.delete_tied="
+# Clear deleted torrents magically
+method.set_key = event.download.erased,delete_erased,"execute=rm,-rf,--,$d.base_path="
+
+# Close torrents when diskspace is low
+schedule = monitor_diskspace, 15, 60, ((close_low_diskspace,1000M))
+
+# Write PID on startup
+execute.nothrow = sh, -c, (cat, "echo ", (system.pid), " > ", (session.path), "rtorrent.pid")
+
+# Delete PID on clean exit
+method.insert = system.on_exit, simple, "execute.nothrow = rm, -f, (cat, (session.path), \"rtorrent.pid\")"
+
+### END of rtorrent.rc ###

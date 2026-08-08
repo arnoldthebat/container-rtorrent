@@ -1,0 +1,18 @@
+services:
+  rtorrent:
+    build:
+      context: .
+      tags:
+        - arnoldthebat/rtorrent:latest
+        - arnoldthebat/rtorrent:0.1
+    image: arnoldthebat/rtorrent:latest
+    container_name: rtorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - $HOME/dev/cobbling/rtorrent:/data/rtorrent
+    ports:
+      - "51234:51234"
+      - "8000:8000"
+    restart: unless-stopped
