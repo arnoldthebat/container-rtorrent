@@ -105,8 +105,6 @@ RUN apk --update --no-cache add \
     bash \
     brotli \
     ca-certificates \
-    coreutils \
-    ffmpeg \
     libidn2 \
     libpsl \
     libsigc++ \
@@ -121,7 +119,6 @@ RUN apk --update --no-cache add \
     su-exec \
     tmux \
     tzdata \
-    unzip \
     util-linux \
     zip \
     zstd
