@@ -4,7 +4,7 @@ services:
       context: .
       tags:
         - arnoldthebat/rtorrent:latest
-        - arnoldthebat/rtorrent:0.2
+        - arnoldthebat/rtorrent:0.3
     image: arnoldthebat/rtorrent:latest
     container_name: rtorrent
     environment:

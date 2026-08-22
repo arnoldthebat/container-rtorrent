@@ -114,13 +114,11 @@ RUN apk --update --no-cache add \
     nginx \
     openssl \
     python3 \
-    py3-pip \
     shadow \
     su-exec \
     tmux \
     tzdata \
     util-linux \
-    zip \
     zstd
 
 
