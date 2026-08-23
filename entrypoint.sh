@@ -12,10 +12,15 @@ SESSION_DIR="/data/rtorrent/.session"
 PID_FILE="${SESSION_DIR}/rtorrent.pid"
 LOCK_FILE="${SESSION_DIR}/rtorrent.lock"
 
-# 1. Pre-flight cleanup
+# Pre-flight cleanup
 if [ -f "$PID_FILE" ]; then
     echo "[init] Cleaning up stale PID file from previous run..."
     rm -f "$PID_FILE"
+fi
+
+if [ ! -r "$RTORRENT_RC" ]; then
+    echo "[init] rTorrent configuration is missing or unreadable: $RTORRENT_RC" >&2
+    exit 1
 fi
 
 # Start Nginx in background
@@ -27,18 +32,19 @@ cleanup() {
     echo "[shutdown] Received termination signal. Stopping rtorrent cleanly..."
     
     # Send SIGINT (Ctrl+C equivalent) to rtorrent inside tmux
-    if tmux has-session -t rtorrent-session 2>/dev/null; then
-        tmux send-keys -t rtorrent-session:0.0 C-c
-        
-        # Wait up to 10 seconds for rtorrent process to exit
+    if su-exec rtorrent tmux has-session -t rtorrent-session 2>/dev/null; then
+        su-exec rtorrent tmux send-keys -t rtorrent-session:0.0 C-c
+
         COUNT=0
-        while tmux has-session -t rtorrent-session 2>/dev/null && [ $COUNT -lt 10 ]; do
+        while su-exec rtorrent tmux has-session -t rtorrent-session 2>/dev/null \
+            && [ "$COUNT" -lt 10 ]; do
             sleep 1
             COUNT=$((COUNT + 1))
         done
-        
-        # Force kill tmux server if still alive after timeout
-        tmux kill-server 2>/dev/null || true
+
+        if su-exec rtorrent tmux has-session -t rtorrent-session 2>/dev/null; then
+            su-exec rtorrent tmux kill-server 2>/dev/null || true
+        fi
     fi
 
     # Clean up PID and lock file if rtorrent left it behind
@@ -58,7 +64,8 @@ trap 'cleanup' INT TERM
 # Start rtorrent under tmux as user 'rtorrent'
 echo "[init] Starting rtorrent inside tmux..."
 # tmux new-session -d -s rtorrent-session rtorrent -n -o import=/data/rtorrent/config/.rtorrent.rc
-su-exec rtorrent tmux new-session -d -s rtorrent-session rtorrent -n -o import=/data/rtorrent/config/.rtorrent.rc
+su-exec rtorrent tmux new-session -d -s rtorrent-session \
+    rtorrent -n -o "import=${RTORRENT_RC}"
 
 # Start nginx
 # exec /usr/sbin/nginx

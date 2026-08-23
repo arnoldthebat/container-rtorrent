@@ -1,0 +1,11 @@
+# Source-control and editor metadata are never required by the image build.
+.git
+.vscode
+
+# Local configuration and runtime output.
+.env
+.env.*
+*.log
+data/
+downloads/
+tmp/

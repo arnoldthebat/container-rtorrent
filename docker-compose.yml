@@ -4,7 +4,7 @@ services:
       context: .
       tags:
         - arnoldthebat/rtorrent:latest
-        - arnoldthebat/rtorrent:0.3
+        - arnoldthebat/rtorrent:0.4
     image: arnoldthebat/rtorrent:latest
     container_name: rtorrent
     environment:
@@ -13,6 +13,7 @@ services:
     volumes:
       - $HOME/dev/cobbling/rtorrent:/data/rtorrent
     ports:
-      - "51234:51234"
+      - "55555:55555"
+      - "55555:55555/udp"
       - "8000:8000"
     restart: unless-stopped
