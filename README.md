@@ -26,7 +26,7 @@ docker run -d \
   -p 55555:55555/udp \
   -p 8000:8000 \
   -v "$HOME/rtorrent:/data/rtorrent" \
-  arnoldthebat/rtorrent:latest
+  ghcr.io/arnoldthebat/rtorrent:latest
 ```
 
 The container is ready when Docker reports it as healthy:
