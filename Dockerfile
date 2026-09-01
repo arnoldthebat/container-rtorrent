@@ -168,3 +168,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD /healthcheck.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
+
+LABEL org.opencontainers.image.source=https://github.com/arnoldthebat/container-rtorrent

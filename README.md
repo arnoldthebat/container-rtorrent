@@ -16,6 +16,8 @@ curl -fsSL https://raw.githubusercontent.com/arnoldthebat/container-rtorrent/mai
   -o "$HOME/rtorrent/config/.rtorrent.rc"
 ```
 
+Optionally review versions via <https://github.com/arnoldthebat/container-rtorrent/pkgs/container/rtorrent>
+
 Run the image:
 
 ```bash
